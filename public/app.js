@@ -24,17 +24,16 @@ const flashcardsOutput = document.getElementById('flashcardsOutput');
 let selectedFile = null;
 let inputText = '';
 let activeTab = 'file';
+let currentOutputs = null; // Store original outputs for translation
 
 // Tab Switching
 tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
 
-        // Update active tab button
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // Update active tab content
         if (tab === 'file') {
             fileTab.classList.add('active');
             textTab.classList.remove('active');
@@ -45,17 +44,18 @@ tabBtns.forEach(btn => {
             activeTab = 'text';
         }
 
-        // Update process button state
         updateProcessButton();
     });
 });
 
 // Text Input Handler
-textInput.addEventListener('input', (e) => {
-    inputText = e.target.value.trim();
-    charCount.textContent = e.target.value.length;
-    updateProcessButton();
-});
+if (textInput) {
+    textInput.addEventListener('input', (e) => {
+        inputText = e.target.value.trim();
+        charCount.textContent = e.target.value.length;
+        updateProcessButton();
+    });
+}
 
 // File Upload Handlers
 uploadArea.addEventListener('click', () => fileInput.click());
@@ -86,14 +86,12 @@ fileInput.addEventListener('change', (e) => {
 });
 
 function handleFileSelect(file) {
-    // Validate file type
     const validTypes = ['application/pdf', 'text/plain'];
     if (!validTypes.includes(file.type)) {
         alert('Please upload a PDF or TXT file');
         return;
     }
 
-    // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
         alert('File size must be less than 10MB');
         return;
@@ -101,7 +99,6 @@ function handleFileSelect(file) {
 
     selectedFile = file;
 
-    // Update UI
     uploadArea.classList.add('has-file');
     uploadArea.querySelector('.upload-title').textContent = file.name;
     uploadArea.querySelector('.upload-subtitle').textContent = `${(file.size / 1024).toFixed(1)} KB`;
@@ -113,24 +110,20 @@ function updateProcessButton() {
     if (activeTab === 'file') {
         processBtn.disabled = !selectedFile;
     } else {
-        processBtn.disabled = inputText.length < 50; // Minimum 50 characters
+        processBtn.disabled = inputText.length < 50;
     }
 }
 
 // Process Content
 processBtn.addEventListener('click', async () => {
-    // Disable button
     processBtn.disabled = true;
     processBtn.querySelector('.btn-text').textContent = 'Processing...';
-
-    // Show processing status
     processingStatus.style.display = 'block';
 
     try {
         let response;
 
         if (activeTab === 'file') {
-            // Process file
             const formData = new FormData();
             formData.append('document', selectedFile);
 
@@ -139,7 +132,6 @@ processBtn.addEventListener('click', async () => {
                 body: formData
             });
         } else {
-            // Process text
             response = await fetch('/api/process-text', {
                 method: 'POST',
                 headers: {
@@ -152,8 +144,9 @@ processBtn.addEventListener('click', async () => {
         const result = await response.json();
 
         if (result.success) {
-            // Display results
+            currentOutputs = result.outputs;
             displayResults(result.outputs);
+            setupActionButtons();
         } else {
             throw new Error(result.error || 'Processing failed');
         }
@@ -162,7 +155,6 @@ processBtn.addEventListener('click', async () => {
         console.error('Error:', error);
         alert(`Error: ${error.message}`);
 
-        // Reset UI
         processBtn.disabled = false;
         processBtn.querySelector('.btn-text').textContent = 'Generate Learning Stages';
         processingStatus.style.display = 'none';
@@ -171,121 +163,214 @@ processBtn.addEventListener('click', async () => {
 
 // Display Results
 function displayResults(outputs) {
-    // Render simplified explanation
+    // Simplified - 3-4 lines only
     simplifiedOutput.innerHTML = `<p>${outputs.simplified}</p>`;
+    simplifiedOutput.dataset.originalText = outputs.simplified;
 
-    // Render deep-dive explanation (preserve paragraph breaks)
+    // Deep-dive
     const deepDiveFormatted = outputs.deepDive
         .split('\n\n')
         .map(para => `<p>${para}</p>`)
         .join('');
     deepDiveOutput.innerHTML = deepDiveFormatted;
+    deepDiveOutput.dataset.originalText = outputs.deepDive;
 
-    // Render visual learning
+    // Visual - ONLY show image, no text
     if (outputs.visual) {
         const visualData = typeof outputs.visual === 'string'
             ? { text: outputs.visual, imageUrl: null }
             : outputs.visual;
 
-        let visualHTML = formatMarkdown(visualData.text);
-
-        // Add image if available
         if (visualData.imageUrl) {
-            visualHTML += `<div class="visual-diagram"><img src="${visualData.imageUrl}" alt="Visual Diagram"></div>`;
+            // Show ONLY the image
+            visualOutput.innerHTML = `<img src="${visualData.imageUrl}" alt="Educational Diagram">`;
+        } else {
+            // No image available - show placeholder
+            visualOutput.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <p>📊 Generating visual diagram...</p>
+                <p style="font-size: 0.9rem; margin-top: 10px;">Image generation in progress</p>
+            </div>`;
         }
-
-        visualOutput.innerHTML = visualHTML;
-        visualOutput.classList.add('visual-content');
     }
 
-    // Render flashcards as visual cards
+    // Flashcards - exactly 4
     if (Array.isArray(outputs.flashcards)) {
-        flashcardsOutput.innerHTML = outputs.flashcards.map(card => `
-            <div class="flashcard">
+        flashcardsOutput.innerHTML = outputs.flashcards.map((card, index) => `
+            <div class="flashcard" data-index="${index}">
                 <div class="flashcard-question">${card.question}</div>
                 <div class="flashcard-answer">${card.answer}</div>
             </div>
         `).join('');
-    } else {
-        // Fallback if flashcards are in text format
-        flashcardsOutput.innerHTML = formatMarkdown(outputs.flashcards);
+
+        // Store original for translation
+        flashcardsOutput.dataset.originalCards = JSON.stringify(outputs.flashcards);
     }
 
-    // Hide upload section, show results
     setTimeout(() => {
         uploadSection.style.display = 'none';
         processingStatus.style.display = 'none';
         resultsSection.style.display = 'block';
-
-        // Scroll to results
         resultsSection.scrollIntoView({ behavior: 'smooth' });
     }, 500);
 }
 
-// Simple Markdown Formatter
-function formatMarkdown(text) {
-    if (!text) return '';
+// Setup Action Buttons
+function setupActionButtons() {
+    // Copy buttons
+    document.querySelectorAll('.action-btn[data-action="copy"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const section = e.target.closest('.stage-card');
+            const content = section.querySelector('.stage-content').innerText;
 
-    let html = text;
+            try {
+                await navigator.clipboard.writeText(content);
+                btn.innerHTML = '<span>✅</span>';
+                setTimeout(() => btn.innerHTML = '<span>📋</span>', 2000);
+            } catch (err) {
+                alert('Failed to copy');
+            }
+        });
+    });
 
-    // Headers
-    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    // Like/Dislike buttons
+    document.querySelectorAll('.action-btn[data-action="like"], .action-btn[data-action="dislike"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            btn.classList.toggle('active');
+        });
+    });
 
-    // Bold
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Share buttons
+    document.querySelectorAll('.action-btn[data-action="share"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const section = e.target.closest('.stage-card');
+            const content = section.querySelector('.stage-content').innerText;
 
-    // Italic
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'EduTransform AI',
+                        text: content
+                    });
+                } catch (err) {
+                    console.log('Share cancelled');
+                }
+            } else {
+                alert('Sharing not supported on this browser');
+            }
+        });
+    });
 
-    // Inline code
-    html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+    // Language selection
+    document.querySelectorAll('.language-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const section = e.target.dataset.section;
+            const language = e.target.value;
 
-    // Line breaks and paragraphs
-    html = html.replace(/\n\n/g, '</p><p>');
-    html = html.replace(/\n/g, '<br>');
+            await translateSection(section, language);
+        });
+    });
+}
 
-    // Lists
-    html = html.replace(/<p>- (.*?)<br>/g, '<ul><li>$1</li>');
-    html = html.replace(/<\/li><br>- /g, '</li><li>');
-    html = html.replace(/<\/li><\/p>/g, '</li></ul></p>');
+// Translation function
+async function translateSection(section, targetLang) {
+    if (targetLang === 'en' || !currentOutputs) return;
 
-    // Nested lists
-    html = html.replace(/<li>  - (.*?)<\/li>/g, '<li><ul><li>$1</li></ul></li>');
+    const langMap = {
+        'mr': 'Marathi',
+        'hi': 'Hindi'
+    };
 
-    return html;
+    try {
+        let textToTranslate = '';
+        let outputElement = null;
+
+        if (section === 'simplified') {
+            textToTranslate = currentOutputs.simplified;
+            outputElement = simplifiedOutput;
+        } else if (section === 'deepdive') {
+            textToTranslate = currentOutputs.deepDive;
+            outputElement = deepDiveOutput;
+        } else if (section === 'flashcards') {
+            // Translate flashcards
+            const cards = currentOutputs.flashcards;
+            const translatedCards = await Promise.all(cards.map(async card => {
+                const translatedQ = await translateText(card.question, langMap[targetLang]);
+                const translatedA = await translateText(card.answer, langMap[targetLang]);
+                return { question: translatedQ, answer: translatedA };
+            }));
+
+            flashcardsOutput.innerHTML = translatedCards.map((card, index) => `
+                <div class="flashcard" data-index="${index}">
+                    <div class="flashcard-question">${card.question}</div>
+                    <div class="flashcard-answer">${card.answer}</div>
+                </div>
+            `).join('');
+            return;
+        }
+
+        if (textToTranslate && outputElement) {
+            const translated = await translateText(textToTranslate, langMap[targetLang]);
+
+            if (section === 'simplified') {
+                outputElement.innerHTML = `<p>${translated}</p>`;
+            } else {
+                const formatted = translated.split('\n\n').map(para => `<p>${para}</p>`).join('');
+                outputElement.innerHTML = formatted;
+            }
+        }
+    } catch (error) {
+        console.error('Translation error:', error);
+        alert('Translation failed. Please try again.');
+    }
+}
+
+// Translate text using Groq API
+async function translateText(text, targetLanguage) {
+    try {
+        const response = await fetch('/api/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: text,
+                targetLanguage: targetLanguage
+            })
+        });
+
+        const result = await response.json();
+        return result.translatedText || text;
+    } catch (error) {
+        console.error('Translation API error:', error);
+        return text;
+    }
 }
 
 // New Content Button
 newDocBtn.addEventListener('click', () => {
-    // Reset state
     selectedFile = null;
     inputText = '';
+    currentOutputs = null;
 
-    // Reset file upload UI
     uploadArea.classList.remove('has-file');
     uploadArea.querySelector('.upload-title').textContent = 'Drop your document here';
     uploadArea.querySelector('.upload-subtitle').textContent = 'or click to browse';
 
-    // Reset text input
-    textInput.value = '';
-    charCount.textContent = '0';
+    if (textInput) {
+        textInput.value = '';
+        charCount.textContent = '0';
+    }
 
-    // Reset button
     processBtn.disabled = true;
     processBtn.querySelector('.btn-text').textContent = 'Generate Learning Stages';
 
-    // Clear outputs
     simplifiedOutput.innerHTML = '';
     deepDiveOutput.innerHTML = '';
     visualOutput.innerHTML = '';
     flashcardsOutput.innerHTML = '';
 
-    // Show upload section
     resultsSection.style.display = 'none';
     uploadSection.style.display = 'block';
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });

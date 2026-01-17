@@ -131,6 +131,44 @@ router.post('/process-text', express.json(), async (req, res) => {
 });
 
 /**
+ * POST /api/translate
+ * Translate text to target language using Groq
+ */
+router.post('/translate', express.json(), async (req, res) => {
+    try {
+        const { text, targetLanguage } = req.body;
+
+        if (!text || !targetLanguage) {
+            return res.status(400).json({
+                success: false,
+                error: 'Text and target language are required'
+            });
+        }
+
+        const aiClient = require('../utils/aiClient');
+
+        const systemPrompt = `You are a professional translator. Translate the given text to ${targetLanguage}. Maintain the same tone, style, and formatting. Only output the translated text, nothing else.`;
+
+        const userPrompt = `Translate this text to ${targetLanguage}:\n\n${text}`;
+
+        const translatedText = await aiClient.generate(systemPrompt, userPrompt);
+
+        res.json({
+            success: true,
+            translatedText: translatedText.trim()
+        });
+
+    } catch (error) {
+        console.error('[API] Translation error:', error);
+
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Translation failed'
+        });
+    }
+});
+
+/**
  * GET /api/health
  * Health check endpoint
  */

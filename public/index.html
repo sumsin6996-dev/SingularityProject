@@ -75,7 +75,7 @@
                 </div>
             </section>
 
-            <!-- Results Section - 4-Stage Dashboard -->
+            <!-- Results Section - NEW LAYOUT ORDER -->
             <section class="results-section" id="resultsSection" style="display: none;">
                 <div class="results-header">
                     <h2 class="section-title">Your Learning Stages</h2>
@@ -84,72 +84,130 @@
                     </button>
                 </div>
 
-                <!-- Dashboard Grid Layout -->
-                <div class="dashboard-grid">
-                    <!-- Top Row: Simplified + Deep-Dive -->
-                    <div class="top-row">
-                        <!-- Simplified Explanation (Left) -->
-                        <div class="stage-card simplified-card">
-                            <div class="stage-header">
-                                <div class="stage-icon">💡</div>
-                                <div>
-                                    <h3 class="stage-title">Simplified Explanation</h3>
-                                    <p class="stage-subtitle">Quick overview for beginners</p>
-                                </div>
-                            </div>
-                            <div class="stage-content scrollable" id="simplifiedOutput">
-                                <!-- Content will be inserted here -->
-                            </div>
-                        </div>
+                <!-- NEW LAYOUT: Visual → Flashcards → Simplified+DeepDive -->
+                <div class="dashboard-grid-new">
 
-                        <!-- Deep-Dive Explanation (Right) -->
-                        <div class="stage-card deepdive-card">
-                            <div class="stage-header">
-                                <div class="stage-icon">🎯</div>
-                                <div>
-                                    <h3 class="stage-title">Deep-Dive Explanation</h3>
-                                    <p class="stage-subtitle">Comprehensive understanding</p>
-                                </div>
-                            </div>
-                            <div class="stage-content scrollable" id="deepDiveOutput">
-                                <!-- Content will be inserted here -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Middle Row: Visual Learning -->
-                    <div class="visual-section">
-                        <div class="stage-card visual-card">
+                    <!-- 1. VISUAL LEARNING (Top, Center, Image Only) -->
+                    <div class="visual-section-new">
+                        <div class="stage-card visual-card-new">
                             <div class="stage-header">
                                 <div class="stage-icon">📊</div>
                                 <div>
                                     <h3 class="stage-title">Visual Learning</h3>
-                                    <p class="stage-subtitle">Concept maps and diagrams</p>
+                                    <p class="stage-subtitle">Interactive charts and diagrams</p>
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
+                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
+                                    <button class="action-btn" data-action="dislike"
+                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="share"
+                                        title="Share"><span>🔗</span></button>
+                                    <select class="language-select" data-section="visual">
+                                        <option value="en">English</option>
+                                        <option value="mr">मराठी</option>
+                                        <option value="hi">हिंदी</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div class="stage-content" id="visualOutput">
-                                <!-- Content will be inserted here -->
+                            <div class="stage-content visual-image-only" id="visualOutput">
+                                <!-- Only image/chart will be shown here -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- Bottom Row: Flashcards -->
-                    <div class="flashcards-section">
-                        <div class="stage-card flashcards-card">
+                    <!-- 2. FLASHCARDS (4 cards in grid) -->
+                    <div class="flashcards-section-new">
+                        <div class="stage-card flashcards-card-new">
                             <div class="stage-header">
                                 <div class="stage-icon">🎴</div>
                                 <div>
                                     <h3 class="stage-title">Exam Flashcards</h3>
-                                    <p class="stage-subtitle">Quick recall and memorization</p>
+                                    <p class="stage-subtitle">4 key concepts for quick recall</p>
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
+                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
+                                    <button class="action-btn" data-action="dislike"
+                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="share"
+                                        title="Share"><span>🔗</span></button>
+                                    <select class="language-select" data-section="flashcards">
+                                        <option value="en">English</option>
+                                        <option value="mr">मराठी</option>
+                                        <option value="hi">हिंदी</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="stage-content">
-                                <div class="flashcards-grid" id="flashcardsOutput">
-                                    <!-- Flashcards will be inserted here -->
+                                <div class="flashcards-grid-four" id="flashcardsOutput">
+                                    <!-- Exactly 4 flashcards will be inserted here -->
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 3. SIMPLIFIED + DEEP-DIVE (Side by Side at Bottom) -->
+                    <div class="bottom-row">
+                        <!-- Simplified Explanation (Left) -->
+                        <div class="stage-card simplified-card-new">
+                            <div class="stage-header">
+                                <div class="stage-icon">💡</div>
+                                <div>
+                                    <h3 class="stage-title">Simplified</h3>
+                                    <p class="stage-subtitle">Quick 3-4 line overview</p>
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
+                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
+                                    <button class="action-btn" data-action="dislike"
+                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="share"
+                                        title="Share"><span>🔗</span></button>
+                                    <select class="language-select" data-section="simplified">
+                                        <option value="en">English</option>
+                                        <option value="mr">मराठी</option>
+                                        <option value="hi">हिंदी</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="stage-content simplified-short" id="simplifiedOutput">
+                                <!-- 3-4 lines only -->
+                            </div>
+                        </div>
+
+                        <!-- Deep-Dive Explanation (Right) -->
+                        <div class="stage-card deepdive-card-new">
+                            <div class="stage-header">
+                                <div class="stage-icon">🎯</div>
+                                <div>
+                                    <h3 class="stage-title">Deep-Dive</h3>
+                                    <p class="stage-subtitle">Comprehensive understanding</p>
+                                </div>
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
+                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
+                                    <button class="action-btn" data-action="dislike"
+                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="share"
+                                        title="Share"><span>🔗</span></button>
+                                    <select class="language-select" data-section="deepdive">
+                                        <option value="en">English</option>
+                                        <option value="mr">मराठी</option>
+                                        <option value="hi">हिंदी</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="stage-content scrollable" id="deepDiveOutput">
+                                <!-- Scrollable content -->
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
         </div>

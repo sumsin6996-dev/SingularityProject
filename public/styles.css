@@ -629,3 +629,135 @@ body {
     height: auto;
     border-radius: var(--radius-sm);
 }
+
+/* NEW LAYOUT STYLES */
+
+/* New Dashboard Grid - Visual → Flashcards → Simplified+DeepDive */
+.dashboard-grid-new {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+/* Visual Section - Top Center, Image Only */
+.visual-section-new {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.visual-card-new {
+    max-width: 900px;
+    width: 100%;
+}
+
+.visual-image-only {
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+}
+
+.visual-image-only img {
+    max-width: 100%;
+    max-height: 500px;
+    object-fit: contain;
+}
+
+/* Flashcards Section - 4 Cards Grid */
+.flashcards-section-new {
+    width: 100%;
+}
+
+.flashcards-grid-four {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+}
+
+/* Bottom Row - Simplified + Deep-Dive Side by Side */
+.bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+/* Simplified - Short 3-4 Lines */
+.simplified-short {
+    min-height: 120px;
+    max-height: 150px;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-left: auto;
+}
+
+.action-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-size: 1.1rem;
+}
+
+.action-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.action-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Language Selector */
+.language-select {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.6rem;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.language-select:hover {
+    border-color: var(--primary);
+}
+
+.language-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Responsive Design for New Layout */
+@media (max-width: 1024px) {
+    .flashcards-grid-four {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bottom-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .flashcards-grid-four {
+        grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+}
