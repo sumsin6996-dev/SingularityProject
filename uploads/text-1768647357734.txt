@@ -1,0 +1,5 @@
+1. What is data analytics and data science
+2. ex of ml in our day to day life
+3. why gen ai is future and important to us
+4. will ai lose the jobs(it/non-it)
+5. importance of power bi and tableau
