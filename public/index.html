@@ -4,12 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduTransform AI - 4-Stage Learning System</title>
+    <title>Clarify - AI Learning Assistant</title>
     <meta name="description" content="Transform educational documents into four learning stages">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 </head>
 
 <body>
@@ -19,7 +20,7 @@
             <div class="header-content">
                 <h1 class="logo">
                     <span class="logo-icon">🎓</span>
-                    <span class="logo-text">EduTransform AI</span>
+                    <span class="logo-text">Clarify</span>
                 </h1>
                 <p class="tagline">Transform Your Learning Experience</p>
             </div>
@@ -62,6 +63,29 @@
                         <p class="text-char-count"><span id="charCount">0</span> characters</p>
                     </div>
 
+                    <!-- Output Selection - Modern Toggles -->
+                    <div class="output-selection">
+                        <p class="selection-title">Select outputs to generate:</p>
+                        <div class="toggle-group">
+                            <button class="toggle-btn active" data-output="visual">
+                                <span class="toggle-icon">📊</span>
+                                <span class="toggle-label">Visual</span>
+                            </button>
+                            <button class="toggle-btn active" data-output="flashcards">
+                                <span class="toggle-icon">🎴</span>
+                                <span class="toggle-label">Flashcards</span>
+                            </button>
+                            <button class="toggle-btn active" data-output="simplified">
+                                <span class="toggle-icon">💡</span>
+                                <span class="toggle-label">Simplified</span>
+                            </button>
+                            <button class="toggle-btn active" data-output="deepdive">
+                                <span class="toggle-icon">🎯</span>
+                                <span class="toggle-label">Deep-Dive</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <button class="btn-primary" id="processBtn" disabled>
                         <span class="btn-text">Generate Learning Stages</span>
                         <span class="btn-icon">→</span>
@@ -98,10 +122,8 @@
                                 </div>
                                 <!-- Action Buttons -->
                                 <div class="action-buttons">
-                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
-                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
-                                    <button class="action-btn" data-action="dislike"
-                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="copy" data-section="visual"
+                                        title="Copy"><span>📋</span></button>
                                     <button class="action-btn" data-action="share"
                                         title="Share"><span>🔗</span></button>
                                     <select class="language-select" data-section="visual">
@@ -126,14 +148,8 @@
                                     <h3 class="stage-title">Exam Flashcards</h3>
                                     <p class="stage-subtitle">4 key concepts for quick recall</p>
                                 </div>
-                                <!-- Action Buttons -->
+                                <!-- Language Selection Only -->
                                 <div class="action-buttons">
-                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
-                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
-                                    <button class="action-btn" data-action="dislike"
-                                        title="Dislike"><span>👎</span></button>
-                                    <button class="action-btn" data-action="share"
-                                        title="Share"><span>🔗</span></button>
                                     <select class="language-select" data-section="flashcards">
                                         <option value="en">English</option>
                                         <option value="mr">मराठी</option>
@@ -161,10 +177,8 @@
                                 </div>
                                 <!-- Action Buttons -->
                                 <div class="action-buttons">
-                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
-                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
-                                    <button class="action-btn" data-action="dislike"
-                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="copy" data-section="simplified"
+                                        title="Copy"><span>📋</span></button>
                                     <button class="action-btn" data-action="share"
                                         title="Share"><span>🔗</span></button>
                                     <select class="language-select" data-section="simplified">
@@ -189,10 +203,8 @@
                                 </div>
                                 <!-- Action Buttons -->
                                 <div class="action-buttons">
-                                    <button class="action-btn" data-action="copy" title="Copy"><span>📋</span></button>
-                                    <button class="action-btn" data-action="like" title="Like"><span>👍</span></button>
-                                    <button class="action-btn" data-action="dislike"
-                                        title="Dislike"><span>👎</span></button>
+                                    <button class="action-btn" data-action="copy" data-section="deepdive"
+                                        title="Copy"><span>📋</span></button>
                                     <button class="action-btn" data-action="share"
                                         title="Share"><span>🔗</span></button>
                                     <select class="language-select" data-section="deepdive">
@@ -216,7 +228,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>Powered by Advanced AI • Four Learning Stages • Adaptive Education</p>
+            <p>Powered by Clarify AI • Adaptive Learning • Smart Education</p>
         </div>
     </footer>
 

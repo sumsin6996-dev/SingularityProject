@@ -24,7 +24,14 @@ const flashcardsOutput = document.getElementById('flashcardsOutput');
 let selectedFile = null;
 let inputText = '';
 let activeTab = 'file';
-let currentOutputs = null; // Store original outputs for translation
+let currentOutputs = null;
+
+// Toggle button handlers
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+    });
+});
 
 // Tab Switching
 tabBtns.forEach(btn => {
@@ -120,12 +127,21 @@ processBtn.addEventListener('click', async () => {
     processBtn.querySelector('.btn-text').textContent = 'Processing...';
     processingStatus.style.display = 'block';
 
+    // Get selected outputs from toggle buttons
+    const selectedOutputs = {
+        visual: document.querySelector('.toggle-btn[data-output="visual"]').classList.contains('active'),
+        flashcards: document.querySelector('.toggle-btn[data-output="flashcards"]').classList.contains('active'),
+        simplified: document.querySelector('.toggle-btn[data-output="simplified"]').classList.contains('active'),
+        deepDive: document.querySelector('.toggle-btn[data-output="deepdive"]').classList.contains('active')
+    };
+
     try {
         let response;
 
         if (activeTab === 'file') {
             const formData = new FormData();
             formData.append('document', selectedFile);
+            formData.append('selectedOutputs', JSON.stringify(selectedOutputs));
 
             response = await fetch('/api/process', {
                 method: 'POST',
@@ -137,7 +153,10 @@ processBtn.addEventListener('click', async () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ text: inputText })
+                body: JSON.stringify({
+                    text: inputText,
+                    selectedOutputs: selectedOutputs
+                })
             });
         }
 
@@ -145,7 +164,7 @@ processBtn.addEventListener('click', async () => {
 
         if (result.success) {
             currentOutputs = result.outputs;
-            displayResults(result.outputs);
+            displayResults(result.outputs, selectedOutputs);
             setupActionButtons();
         } else {
             throw new Error(result.error || 'Processing failed');
@@ -153,7 +172,7 @@ processBtn.addEventListener('click', async () => {
 
     } catch (error) {
         console.error('Error:', error);
-        alert(`Error: ${error.message}`);
+        alert(`Error: ${error.message} `);
 
         processBtn.disabled = false;
         processBtn.querySelector('.btn-text').textContent = 'Generate Learning Stages';
@@ -161,49 +180,116 @@ processBtn.addEventListener('click', async () => {
     }
 });
 
-// Display Results
-function displayResults(outputs) {
-    // Simplified - 3-4 lines only
-    simplifiedOutput.innerHTML = `<p>${outputs.simplified}</p>`;
-    simplifiedOutput.dataset.originalText = outputs.simplified;
+// Display Results - Only show selected outputs
+function displayResults(outputs, selectedOutputs) {
+    // Hide all sections first
+    document.querySelector('.visual-section-new').style.display = 'none';
+    document.querySelector('.flashcards-section-new').style.display = 'none';
+    document.querySelector('.bottom-row').style.display = 'none';
 
-    // Deep-dive
-    const deepDiveFormatted = outputs.deepDive
-        .split('\n\n')
-        .map(para => `<p>${para}</p>`)
-        .join('');
-    deepDiveOutput.innerHTML = deepDiveFormatted;
-    deepDiveOutput.dataset.originalText = outputs.deepDive;
+    // Show only selected sections
+    if (selectedOutputs.visual && outputs.visual) {
+        document.querySelector('.visual-section-new').style.display = 'flex';
+        const visualData = typeof outputs.visual === 'string' ? { text: outputs.visual, type: 'mermaid' } : outputs.visual;
 
-    // Visual - ONLY show image, no text
-    if (outputs.visual) {
-        const visualData = typeof outputs.visual === 'string'
-            ? { text: outputs.visual, imageUrl: null }
-            : outputs.visual;
+        // Render Mermaid diagram
+        if (visualData.type === 'mermaid' || visualData.text.includes('```mermaid')) {
+            let mermaidCode = '';
 
-        if (visualData.imageUrl) {
-            // Show ONLY the image
-            visualOutput.innerHTML = `<img src="${visualData.imageUrl}" alt="Educational Diagram">`;
+            // Try to extract from code blocks
+            const mermaidMatch = visualData.text.match(/```mermaid\n?([\s\S]*?)```/);
+            if (mermaidMatch) {
+                mermaidCode = mermaidMatch[1].trim();
+            } else {
+                // If no backticks but looks like mermaid, use raw text
+                // specialized cleanup for common "Graph LR" vs "graph LR" issues
+                mermaidCode = visualData.text.replace(/```/g, '').trim();
+            }
+
+            const diagramId = 'mermaid-' + Date.now();
+            visualOutput.innerHTML = `<div class="mermaid" id="${diagramId}">${mermaidCode}</div>`;
+
+            // Initialize Mermaid
+            if (typeof mermaid !== 'undefined') {
+                try {
+                    mermaid.initialize({
+                        startOnLoad: false,
+                        theme: 'dark',
+                        themeVariables: {
+                            primaryColor: '#6366f1',
+                            primaryTextColor: '#fff',
+                            primaryBorderColor: '#818cf8',
+                            lineColor: '#818cf8',
+                            secondaryColor: '#8b5cf6',
+                            tertiaryColor: '#06b6d4',
+                            background: '#1a1a2e',
+                            mainBkg: '#1a1a2e',
+                            textColor: '#e0e0e0',
+                            fontFamily: 'Inter, sans-serif'
+                        },
+                        securityLevel: 'loose'
+                    });
+
+                    mermaid.run({ nodes: [document.getElementById(diagramId)] }).catch(err => {
+                        console.error('Mermaid rendering error:', err);
+                        visualOutput.innerHTML = `<div style="color: #ef4444; padding: 20px;">
+                            <p>Map Generation Error</p>
+                            <pre style="font-size: 0.8em; overflow: auto; background: #0002; padding: 10px;">${mermaidCode}</pre>
+                        </div>`;
+                    });
+                } catch (e) {
+                    console.error('Mermaid init error:', e);
+                }
+            }
+        } else if (visualData.imageUrl) {
+            visualOutput.innerHTML = `<img src="${visualData.imageUrl}" alt="Educational Diagram" style="max-width: 100%; height: auto;">`;
         } else {
-            // No image available - show placeholder
-            visualOutput.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                <p>📊 Generating visual diagram...</p>
-                <p style="font-size: 0.9rem; margin-top: 10px;">Image generation in progress</p>
-            </div>`;
+            // Fallback for plain text
+            visualOutput.innerHTML = formatMarkdown(visualData.text);
         }
     }
 
-    // Flashcards - exactly 4
-    if (Array.isArray(outputs.flashcards)) {
-        flashcardsOutput.innerHTML = outputs.flashcards.map((card, index) => `
-            <div class="flashcard" data-index="${index}">
-                <div class="flashcard-question">${card.question}</div>
-                <div class="flashcard-answer">${card.answer}</div>
-            </div>
-        `).join('');
+    if (selectedOutputs.flashcards && outputs.flashcards) {
+        document.querySelector('.flashcards-section-new').style.display = 'block';
+        if (Array.isArray(outputs.flashcards)) {
+            flashcardsOutput.innerHTML = outputs.flashcards.map((card, index) => `
+                <div class="flashcard" data-index="${index}">
+                    <div class="flashcard-question">${card.question}</div>
+                    <div class="flashcard-answer">${card.answer}</div>
+                </div>
+            `).join('');
+            flashcardsOutput.dataset.originalCards = JSON.stringify(outputs.flashcards);
+        }
+    }
 
-        // Store original for translation
-        flashcardsOutput.dataset.originalCards = JSON.stringify(outputs.flashcards);
+    if (selectedOutputs.simplified || selectedOutputs.deepDive) {
+        document.querySelector('.bottom-row').style.display = 'grid';
+
+        if (selectedOutputs.simplified && outputs.simplified) {
+            document.querySelector('.simplified-card-new').style.display = 'block';
+            simplifiedOutput.innerHTML = `<p>${outputs.simplified}</p>`;
+            simplifiedOutput.dataset.originalText = outputs.simplified;
+        } else {
+            document.querySelector('.simplified-card-new').style.display = 'none';
+        }
+
+        if (selectedOutputs.deepDive && outputs.deepDive) {
+            document.querySelector('.deepdive-card-new').style.display = 'block';
+            const deepDiveFormatted = outputs.deepDive.split('\n\n').map(para => `<p>${para}</p>`).join('');
+            deepDiveOutput.innerHTML = deepDiveFormatted;
+            deepDiveOutput.dataset.originalText = outputs.deepDive;
+        } else {
+            document.querySelector('.deepdive-card-new').style.display = 'none';
+        }
+
+        // Adjust grid if only one is selected
+        if (selectedOutputs.simplified && !selectedOutputs.deepDive) {
+            document.querySelector('.bottom-row').style.gridTemplateColumns = '1fr';
+        } else if (!selectedOutputs.simplified && selectedOutputs.deepDive) {
+            document.querySelector('.bottom-row').style.gridTemplateColumns = '1fr';
+        } else {
+            document.querySelector('.bottom-row').style.gridTemplateColumns = '1fr 1fr';
+        }
     }
 
     setTimeout(() => {

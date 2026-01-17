@@ -1,90 +1,84 @@
 const aiClient = require('../utils/aiClient');
-const { generate_image } = require('../utils/imageGenerator');
 
 /**
  * Agent 4: Visual Learning Generator
- * Responsibility: Create visual representation with actual diagram/chart image
- * Input: Knowledge graph
- * Output: Hierarchical bullets + actual diagram image
+ * Generates clean Mermaid diagrams for educational content
  */
 class VisualLearning {
     constructor() {
-        this.systemPrompt = `You are an expert at creating visual learning materials.
+        this.systemPrompt = `You are an expert at creating educational Mermaid diagrams.
 
-Your responsibilities:
-1. Generate hierarchical bullet points explaining the concept
-2. Create a detailed description for a visual diagram/chart/mindmap
+STRICT OUTPUT RULES:
+1. Generate ONLY valid Mermaid syntax
+2. Use simple, clean diagrams
+3. Choose diagram type based on content:
+   - Processes/Steps → flowchart (graph TD or graph LR)
+   - Concepts/Relationships → mind map or graph
+   - Comparisons → simple flowchart
 
-The visual description should specify:
-- Type of diagram (flowchart, mind map, concept map, process diagram, etc.)
-- All nodes/elements and their relationships
-- Clear labels and connections
-- Color coding if helpful
+4. Styling rules:
+   - Use hex colors: #6366f1, #8b5cf6, #06b6d4, #10b981
+   - Keep node labels SHORT (max 3-4 words)
+   - Use simple arrows: --> or ---
+   - Maximum 6-8 nodes
 
-Output format:
-### Key Concepts
-- Main concept 1
-  - Sub-concept 1.1
-  - Sub-concept 1.2
-- Main concept 2
+5. Output format:
+\`\`\`mermaid
+graph LR
+    A[Node 1] --> B[Node 2]
+    B --> C[Node 3]
+    style A fill:#6366f1,stroke:#fff,color:#fff
+    style B fill:#8b5cf6,stroke:#fff,color:#fff
+    style C fill:#06b6d4,stroke:#fff,color:#fff
+\`\`\`
 
-### Visual Diagram Description
-[Detailed description of the diagram to be generated]
-
-Do NOT use Mermaid syntax or code blocks.
-Focus on creating a clear textual description that can be turned into an image.`;
+CRITICAL: Output ONLY the mermaid code block. No explanations.`;
     }
 
-    /**
-     * Generate visual learning content from knowledge graph
-     * @param {KnowledgeGraph} knowledgeGraph - Structured knowledge
-     * @returns {Promise<object>} Visual learning content with image
-     */
     async generate(knowledgeGraph) {
-        console.log('[Agent 4: Visual Learning] Generating...');
+        console.log('[Agent 4: Visual Learning] Generating diagram...');
 
         try {
-            const conceptsSummary = knowledgeGraph.concepts.map(c => {
-                const examples = c.examples && c.examples.length > 0
-                    ? `\n  Examples: ${c.examples.join(', ')}`
-                    : '';
-                return `- ${c.name}: ${c.description}${examples}`;
-            }).join('\n');
+            // Get top 5 concepts
+            const topConcepts = knowledgeGraph.concepts.slice(0, 5);
+            const conceptNames = topConcepts.map(c => c.name.substring(0, 20)); // Limit length
 
-            const userPrompt = `Create visual learning content for this topic:
+            const userPrompt = `Create a Mermaid flowchart for: ${knowledgeGraph.metadata.mainTopic}
 
-TOPIC: ${knowledgeGraph.metadata.mainTopic || 'Educational Content'}
+Main concepts: ${conceptNames.join(', ')}
 
-CONCEPTS:
-${conceptsSummary}
+Generate a simple flowchart showing how these concepts relate.
+Use graph LR (left to right).
+Keep labels under 4 words.
+Output ONLY the mermaid code block.`;
 
-Generate:
-1. Hierarchical bullet points organizing the key concepts
-2. A detailed description for a visual diagram (flowchart, mind map, or concept diagram)`;
+            const result = await aiClient.generate(this.systemPrompt, userPrompt);
 
-            const textContent = await aiClient.generate(this.systemPrompt, userPrompt);
-
-            // Generate image from the concept
-            const imagePrompt = `Create an educational diagram for: ${knowledgeGraph.metadata.mainTopic}. 
-Include: ${knowledgeGraph.concepts.slice(0, 5).map(c => c.name).join(', ')}. 
-Style: Clean, modern educational infographic with clear labels, arrows showing relationships, and a professional color scheme.`;
-
-            let imageUrl = null;
-            try {
-                imageUrl = await generate_image(imagePrompt, 'visual_diagram');
-            } catch (imgError) {
-                console.error('[Agent 4] Image generation failed:', imgError);
-            }
-
-            console.log('[Agent 4: Visual Learning] Generated successfully');
+            console.log('[Agent 4: Visual Learning] Diagram generated');
 
             return {
-                text: textContent.trim(),
-                imageUrl: imageUrl
+                text: result.trim(),
+                type: 'mermaid'
             };
         } catch (error) {
             console.error('[Agent 4: Visual Learning] Error:', error);
-            throw new Error(`Visual learning generation failed: ${error.message}`);
+
+            // Fallback: Generate a simple default diagram
+            const fallbackDiagram = `\`\`\`mermaid
+graph LR
+    A[${knowledgeGraph.metadata.mainTopic || 'Topic'}] --> B[Learn]
+    B --> C[Practice]
+    C --> D[Master]
+    style A fill:#6366f1,stroke:#fff,color:#fff
+    style B fill:#8b5cf6,stroke:#fff,color:#fff
+    style C fill:#06b6d4,stroke:#fff,color:#fff
+    style D fill:#10b981,stroke:#fff,color:#fff
+\`\`\``;
+
+            return {
+                text: fallbackDiagram,
+                type: 'mermaid'
+            };
         }
     }
 }

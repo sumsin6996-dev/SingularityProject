@@ -1,98 +1,74 @@
 const path = require('path');
 const fs = require('fs').promises;
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
 
 /**
  * Image Generator Utility
- * Generates educational infographic images using Python + Pillow or external API
+ * Generates educational charts and diagrams using QuickChart.io (free API)
  */
 
 async function generate_image(prompt, imageName) {
-    console.log('[Image Generator] Generating educational infographic...');
+    console.log('[Image Generator] Generating chart/diagram...');
     console.log('[Image Generator] Prompt:', prompt.substring(0, 100) + '...');
 
     try {
-        // Create output directory
-        const outputDir = path.join(__dirname, '..', 'public', 'generated-images');
-        await fs.mkdir(outputDir, { recursive: true });
+        // Use QuickChart.io - completely free chart generation API
+        // Creates flowcharts, mind maps, and diagrams
 
-        // Generate unique filename
-        const timestamp = Date.now();
-        const filename = `${imageName}_${timestamp}.png`;
-        const filepath = path.join(outputDir, filename);
+        // Extract key concepts from prompt for chart
+        const concepts = extractConcepts(prompt);
 
-        // For MVP: Create a simple placeholder image using Python PIL
-        // In production: Replace with actual API call (DALL-E, Stable Diffusion, etc.)
+        // Generate Mermaid diagram syntax
+        const mermaidCode = generateMermaidDiagram(concepts, prompt);
 
-        const pythonScript = `
-import sys
-from PIL import Image, ImageDraw, ImageFont
-import textwrap
+        // Encode for QuickChart
+        const encodedMermaid = encodeURIComponent(mermaidCode);
 
-# Create image
-width, height = 800, 600
-img = Image.new('RGB', (width, height), color='#1a1a2e')
+        // QuickChart URL (free, no API key needed)
+        const chartUrl = `https://quickchart.io/chart?c=${encodedMermaid}&format=png&width=800&height=600`;
 
-draw = ImageDraw.Draw(img)
+        console.log('[Image Generator] Chart URL generated successfully');
 
-# Try to use a font, fallback to default if not available
-try:
-    title_font = ImageFont.truetype("arial.ttf", 32)
-    text_font = ImageFont.truetype("arial.ttf", 16)
-except:
-    title_font = ImageFont.load_default()
-    text_font = ImageFont.load_default()
-
-# Draw title
-title = "Educational Infographic"
-draw.text((50, 50), title, fill='#6366f1', font=title_font)
-
-# Draw prompt text (wrapped)
-prompt_text = """${prompt.replace(/"/g, '\\"').substring(0, 300)}"""
-wrapped_text = textwrap.fill(prompt_text, width=60)
-draw.text((50, 120), wrapped_text, fill='#e0e0e0', font=text_font)
-
-# Draw decorative elements
-draw.rectangle([50, 100, 750, 102], fill='#8b5cf6')
-draw.ellipse([650, 450, 750, 550], fill='#06b6d4', outline='#0891b2', width=3)
-
-# Save image
-img.save('${filepath.replace(/\\/g, '\\\\')}')
-print('SUCCESS')
-`;
-
-        // Write Python script to temp file
-        const scriptPath = path.join(outputDir, `generate_${timestamp}.py`);
-        await fs.writeFile(scriptPath, pythonScript);
-
-        // Execute Python script
-        try {
-            const { stdout, stderr } = await execPromise(`python "${scriptPath}"`);
-
-            if (stdout.includes('SUCCESS')) {
-                console.log('[Image Generator] Image generated successfully');
-
-                // Clean up script
-                await fs.unlink(scriptPath).catch(() => { });
-
-                // Return web-accessible path
-                return `/generated-images/${filename}`;
-            } else {
-                throw new Error('Python script failed');
-            }
-        } catch (pythonError) {
-            console.log('[Image Generator] Python not available, using fallback...');
-
-            // Fallback: Return null and show text only
-            await fs.unlink(scriptPath).catch(() => { });
-            return null;
-        }
+        return chartUrl;
 
     } catch (error) {
-        console.error('[Image Generator] Error:', error.message);
+        console.error('[Image Generator] Error:', error);
         return null;
+    }
+}
+
+function extractConcepts(prompt) {
+    // Extract main concepts from prompt
+    const words = prompt.split(/[,.:;]/).map(s => s.trim()).filter(s => s.length > 3);
+    return words.slice(0, 6); // Top 6 concepts
+}
+
+function generateMermaidDiagram(concepts, prompt) {
+    // Generate a simple flowchart or mind map
+    const isProcess = prompt.toLowerCase().includes('process') || prompt.toLowerCase().includes('how');
+
+    if (isProcess) {
+        // Flowchart for processes
+        return `graph TD
+    A[${concepts[0] || 'Start'}] --> B[${concepts[1] || 'Process'}]
+    B --> C[${concepts[2] || 'Analysis'}]
+    C --> D[${concepts[3] || 'Result'}]
+    style A fill:#6366f1
+    style B fill:#8b5cf6
+    style C fill:#06b6d4
+    style D fill:#10b981`;
+    } else {
+        // Mind map for concepts
+        return `graph LR
+    A[${concepts[0] || 'Main Topic'}]
+    A --> B[${concepts[1] || 'Concept 1'}]
+    A --> C[${concepts[2] || 'Concept 2'}]
+    A --> D[${concepts[3] || 'Concept 3'}]
+    B --> E[${concepts[4] || 'Detail'}]
+    C --> F[${concepts[5] || 'Detail'}]
+    style A fill:#6366f1
+    style B fill:#8b5cf6
+    style C fill:#8b5cf6
+    style D fill:#8b5cf6`;
     }
 }
 
