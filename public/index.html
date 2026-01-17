@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTransform AI - Multi-Agent Learning System</title>
+    <meta name="description" content="Transform educational documents into three learning formats using advanced AI agents">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">EduTransform AI</span>
+                </h1>
+                <p class="tagline">Multi-Agent Educational Transformation System</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <h2 class="section-title">Transform Your Learning Material</h2>
+                    <p class="section-description">
+                        Upload any educational document and watch four specialized AI agents transform it into 
+                        <strong>three distinct learning formats</strong>: simplified explanations, visual summaries, and deep technical analysis.
+                    </p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept=".pdf,.txt" hidden>
+                        <div class="upload-icon">📄</div>
+                        <h3 class="upload-title">Drop your document here</h3>
+                        <p class="upload-subtitle">or click to browse</p>
+                        <p class="upload-formats">Supports PDF and TXT files (max 10MB)</p>
+                    </div>
+
+                    <button class="btn-primary" id="processBtn" disabled>
+                        <span class="btn-text">Process Document</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </div>
+
+                <!-- Agent Status -->
+                <div class="agent-status" id="agentStatus" style="display: none;">
+                    <h3 class="status-title">Agent Pipeline Status</h3>
+                    <div class="status-grid">
+                        <div class="status-item" data-agent="1">
+                            <div class="status-icon">🔍</div>
+                            <div class="status-content">
+                                <div class="status-name">Document Analyzer</div>
+                                <div class="status-desc">Extracting knowledge structure...</div>
+                            </div>
+                            <div class="status-indicator"></div>
+                        </div>
+                        <div class="status-item" data-agent="2">
+                            <div class="status-icon">💡</div>
+                            <div class="status-content">
+                                <div class="status-name">Simplification Specialist</div>
+                                <div class="status-desc">Creating beginner-friendly version...</div>
+                            </div>
+                            <div class="status-indicator"></div>
+                        </div>
+                        <div class="status-item" data-agent="3">
+                            <div class="status-icon">📊</div>
+                            <div class="status-content">
+                                <div class="status-name">Visual Synthesizer</div>
+                                <div class="status-desc">Building visual format...</div>
+                            </div>
+                            <div class="status-indicator"></div>
+                        </div>
+                        <div class="status-item" data-agent="4">
+                            <div class="status-icon">🎯</div>
+                            <div class="status-content">
+                                <div class="status-name">Deep-Dive Expander</div>
+                                <div class="status-desc">Generating advanced analysis...</div>
+                            </div>
+                            <div class="status-indicator"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h2 class="section-title">Your Learning Formats</h2>
+                    <button class="btn-secondary" id="newDocBtn">
+                        <span>Process New Document</span>
+                    </button>
+                </div>
+
+                <div class="results-grid">
+                    <!-- Simplified Format -->
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon">💡</div>
+                            <div>
+                                <h3 class="result-title">Simplified</h3>
+                                <p class="result-subtitle">Beginner-friendly explanation</p>
+                            </div>
+                        </div>
+                        <div class="result-content markdown-content" id="simplifiedOutput">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Visual Format -->
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon">📊</div>
+                            <div>
+                                <h3 class="result-title">Visual</h3>
+                                <p class="result-subtitle">Scannable bullet points</p>
+                            </div>
+                        </div>
+                        <div class="result-content markdown-content" id="visualOutput">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Deep-Dive Format -->
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-icon">🎯</div>
+                            <div>
+                                <h3 class="result-title">Deep-Dive</h3>
+                                <p class="result-subtitle">Advanced technical analysis</p>
+                            </div>
+                        </div>
+                        <div class="result-content markdown-content" id="deepDiveOutput">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Powered by Gemini AI • Four Specialized Agents • True Agentic AI</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
