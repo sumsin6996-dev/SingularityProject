@@ -1,19 +1,61 @@
 // DOM Elements
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
+const textInput = document.getElementById('textInput');
+const charCount = document.getElementById('charCount');
 const processBtn = document.getElementById('processBtn');
 const uploadSection = document.getElementById('uploadSection');
-const agentStatus = document.getElementById('agentStatus');
+const processingStatus = document.getElementById('processingStatus');
 const resultsSection = document.getElementById('resultsSection');
 const newDocBtn = document.getElementById('newDocBtn');
 
+// Tab elements
+const tabBtns = document.querySelectorAll('.tab-btn');
+const fileTab = document.getElementById('fileTab');
+const textTab = document.getElementById('textTab');
+
 // Output elements
 const simplifiedOutput = document.getElementById('simplifiedOutput');
-const visualOutput = document.getElementById('visualOutput');
 const deepDiveOutput = document.getElementById('deepDiveOutput');
+const visualOutput = document.getElementById('visualOutput');
+const flashcardsOutput = document.getElementById('flashcardsOutput');
 
 // State
 let selectedFile = null;
+let inputText = '';
+let activeTab = 'file';
+
+// Tab Switching
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+
+        // Update active tab button
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update active tab content
+        if (tab === 'file') {
+            fileTab.classList.add('active');
+            textTab.classList.remove('active');
+            activeTab = 'file';
+        } else {
+            textTab.classList.add('active');
+            fileTab.classList.remove('active');
+            activeTab = 'text';
+        }
+
+        // Update process button state
+        updateProcessButton();
+    });
+});
+
+// Text Input Handler
+textInput.addEventListener('input', (e) => {
+    inputText = e.target.value.trim();
+    charCount.textContent = e.target.value.length;
+    updateProcessButton();
+});
 
 // File Upload Handlers
 uploadArea.addEventListener('click', () => fileInput.click());
@@ -64,43 +106,52 @@ function handleFileSelect(file) {
     uploadArea.querySelector('.upload-title').textContent = file.name;
     uploadArea.querySelector('.upload-subtitle').textContent = `${(file.size / 1024).toFixed(1)} KB`;
 
-    processBtn.disabled = false;
+    updateProcessButton();
 }
 
-// Process Document
-processBtn.addEventListener('click', async () => {
-    if (!selectedFile) return;
+function updateProcessButton() {
+    if (activeTab === 'file') {
+        processBtn.disabled = !selectedFile;
+    } else {
+        processBtn.disabled = inputText.length < 50; // Minimum 50 characters
+    }
+}
 
+// Process Content
+processBtn.addEventListener('click', async () => {
     // Disable button
     processBtn.disabled = true;
     processBtn.querySelector('.btn-text').textContent = 'Processing...';
 
-    // Show agent status
-    agentStatus.style.display = 'block';
-
-    // Animate agent status
-    animateAgentPipeline();
+    // Show processing status
+    processingStatus.style.display = 'block';
 
     try {
-        // Create form data
-        const formData = new FormData();
-        formData.append('document', selectedFile);
+        let response;
 
-        // Send to API
-        const response = await fetch('/api/process', {
-            method: 'POST',
-            body: formData
-        });
+        if (activeTab === 'file') {
+            // Process file
+            const formData = new FormData();
+            formData.append('document', selectedFile);
+
+            response = await fetch('/api/process', {
+                method: 'POST',
+                body: formData
+            });
+        } else {
+            // Process text
+            response = await fetch('/api/process-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: inputText })
+            });
+        }
 
         const result = await response.json();
 
         if (result.success) {
-            // Mark all agents as complete
-            document.querySelectorAll('.status-item').forEach(item => {
-                item.classList.remove('active');
-                item.classList.add('complete');
-            });
-
             // Display results
             displayResults(result.outputs);
         } else {
@@ -113,52 +164,62 @@ processBtn.addEventListener('click', async () => {
 
         // Reset UI
         processBtn.disabled = false;
-        processBtn.querySelector('.btn-text').textContent = 'Process Document';
-        agentStatus.style.display = 'none';
+        processBtn.querySelector('.btn-text').textContent = 'Generate Learning Stages';
+        processingStatus.style.display = 'none';
     }
 });
 
-// Animate Agent Pipeline
-function animateAgentPipeline() {
-    const agents = document.querySelectorAll('.status-item');
-
-    // Reset all
-    agents.forEach(item => {
-        item.classList.remove('active', 'complete');
-    });
-
-    // Activate agents sequentially
-    let currentAgent = 0;
-    const interval = setInterval(() => {
-        if (currentAgent > 0) {
-            agents[currentAgent - 1].classList.remove('active');
-            agents[currentAgent - 1].classList.add('complete');
-        }
-
-        if (currentAgent < agents.length) {
-            agents[currentAgent].classList.add('active');
-            currentAgent++;
-        } else {
-            clearInterval(interval);
-        }
-    }, 1500);
-}
-
 // Display Results
 function displayResults(outputs) {
-    // Convert markdown-like text to HTML
-    simplifiedOutput.innerHTML = formatMarkdown(outputs.simplified);
-    visualOutput.innerHTML = formatMarkdown(outputs.visual);
-    deepDiveOutput.innerHTML = formatMarkdown(outputs.deepDive);
+    // Render simplified explanation
+    simplifiedOutput.innerHTML = `<p>${outputs.simplified}</p>`;
+
+    // Render deep-dive explanation (preserve paragraph breaks)
+    const deepDiveFormatted = outputs.deepDive
+        .split('\n\n')
+        .map(para => `<p>${para}</p>`)
+        .join('');
+    deepDiveOutput.innerHTML = deepDiveFormatted;
+
+    // Render visual learning
+    if (outputs.visual) {
+        const visualData = typeof outputs.visual === 'string'
+            ? { text: outputs.visual, imageUrl: null }
+            : outputs.visual;
+
+        let visualHTML = formatMarkdown(visualData.text);
+
+        // Add image if available
+        if (visualData.imageUrl) {
+            visualHTML += `<div class="visual-diagram"><img src="${visualData.imageUrl}" alt="Visual Diagram"></div>`;
+        }
+
+        visualOutput.innerHTML = visualHTML;
+        visualOutput.classList.add('visual-content');
+    }
+
+    // Render flashcards as visual cards
+    if (Array.isArray(outputs.flashcards)) {
+        flashcardsOutput.innerHTML = outputs.flashcards.map(card => `
+            <div class="flashcard">
+                <div class="flashcard-question">${card.question}</div>
+                <div class="flashcard-answer">${card.answer}</div>
+            </div>
+        `).join('');
+    } else {
+        // Fallback if flashcards are in text format
+        flashcardsOutput.innerHTML = formatMarkdown(outputs.flashcards);
+    }
 
     // Hide upload section, show results
     setTimeout(() => {
         uploadSection.style.display = 'none';
+        processingStatus.style.display = 'none';
         resultsSection.style.display = 'block';
 
         // Scroll to results
         resultsSection.scrollIntoView({ behavior: 'smooth' });
-    }, 1000);
+    }, 500);
 }
 
 // Simple Markdown Formatter
@@ -178,43 +239,48 @@ function formatMarkdown(text) {
     // Italic
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-    // Code
+    // Inline code
     html = html.replace(/`(.*?)`/g, '<code>$1</code>');
 
-    // Line breaks
+    // Line breaks and paragraphs
     html = html.replace(/\n\n/g, '</p><p>');
     html = html.replace(/\n/g, '<br>');
 
-    // Wrap in paragraph
-    html = '<p>' + html + '</p>';
-
-    // Lists (basic)
+    // Lists
     html = html.replace(/<p>- (.*?)<br>/g, '<ul><li>$1</li>');
     html = html.replace(/<\/li><br>- /g, '</li><li>');
     html = html.replace(/<\/li><\/p>/g, '</li></ul></p>');
 
+    // Nested lists
+    html = html.replace(/<li>  - (.*?)<\/li>/g, '<li><ul><li>$1</li></ul></li>');
+
     return html;
 }
 
-// New Document Button
+// New Content Button
 newDocBtn.addEventListener('click', () => {
     // Reset state
     selectedFile = null;
+    inputText = '';
 
-    // Reset UI
+    // Reset file upload UI
     uploadArea.classList.remove('has-file');
     uploadArea.querySelector('.upload-title').textContent = 'Drop your document here';
     uploadArea.querySelector('.upload-subtitle').textContent = 'or click to browse';
 
-    processBtn.disabled = true;
-    processBtn.querySelector('.btn-text').textContent = 'Process Document';
+    // Reset text input
+    textInput.value = '';
+    charCount.textContent = '0';
 
-    agentStatus.style.display = 'none';
+    // Reset button
+    processBtn.disabled = true;
+    processBtn.querySelector('.btn-text').textContent = 'Generate Learning Stages';
 
     // Clear outputs
     simplifiedOutput.innerHTML = '';
-    visualOutput.innerHTML = '';
     deepDiveOutput.innerHTML = '';
+    visualOutput.innerHTML = '';
+    flashcardsOutput.innerHTML = '';
 
     // Show upload section
     resultsSection.style.display = 'none';

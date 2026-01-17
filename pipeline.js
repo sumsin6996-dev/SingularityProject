@@ -1,21 +1,22 @@
 const documentAnalyzer = require('./agents/documentAnalyzer');
-const simplificationSpecialist = require('./agents/simplificationSpecialist');
-const visualSynthesizer = require('./agents/visualSynthesizer');
-const deepDiveExpander = require('./agents/deepDiveExpander');
+const simplifiedExplanation = require('./agents/simplifiedExplanation');
+const deepDiveExplanation = require('./agents/deepDiveExplanation');
+const visualLearning = require('./agents/visualLearning');
+const flashcardGenerator = require('./agents/flashcardGenerator');
 const documentParser = require('./utils/documentParser');
 
 /**
  * Agent Pipeline Orchestrator
- * Coordinates the sequential execution of all four agents
+ * Coordinates the sequential execution of all 5 agents for 4-stage learning output
  */
 class AgentPipeline {
     /**
      * Process a document through the complete agent pipeline
      * @param {string} filePath - Path to uploaded document
-     * @returns {Promise<object>} All three learning outputs
+     * @returns {Promise<object>} All four learning stage outputs
      */
     async process(filePath) {
-        console.log('\n=== STARTING AGENT PIPELINE ===\n');
+        console.log('\n=== STARTING 4-STAGE LEARNING PIPELINE ===\n');
         const startTime = Date.now();
 
         try {
@@ -30,17 +31,20 @@ class AgentPipeline {
             const knowledgeGraph = await documentAnalyzer.analyze(cleanText);
             console.log(`[Pipeline] Knowledge graph created with ${knowledgeGraph.concepts.length} concepts\n`);
 
-            // Steps 2-4: Run agents 2, 3, 4 in parallel (they all use the same knowledge graph)
-            console.log('[Pipeline] Steps 2-4: Running transformation agents in parallel...');
-            const [simplified, visual, deepDive] = await Promise.all([
-                // Agent 2: Simplification Specialist
-                simplificationSpecialist.simplify(knowledgeGraph),
+            // Steps 2-5: Run learning stage generators in parallel
+            console.log('[Pipeline] Steps 2-5: Generating 4 learning stages...');
+            const [simplified, deepDive, visual, flashcards] = await Promise.all([
+                // Agent 2: Simplified Explanation (4-5 sentences)
+                simplifiedExplanation.generate(knowledgeGraph),
 
-                // Agent 3: Visual Synthesizer
-                visualSynthesizer.synthesize(knowledgeGraph),
+                // Agent 3: Deep-Dive Explanation (3-4 paragraphs)
+                deepDiveExplanation.generate(knowledgeGraph),
 
-                // Agent 4: Deep-Dive Expander
-                deepDiveExpander.expand(knowledgeGraph)
+                // Agent 4: Visual Learning (bullets + diagram)
+                visualLearning.generate(knowledgeGraph),
+
+                // Agent 5: Flashcard Generator (3-4 cards)
+                flashcardGenerator.generate(knowledgeGraph)
             ]);
 
             const endTime = Date.now();
@@ -54,8 +58,9 @@ class AgentPipeline {
                 knowledgeGraph: knowledgeGraph.toJSON(),
                 outputs: {
                     simplified: simplified,
+                    deepDive: deepDive,
                     visual: visual,
-                    deepDive: deepDive
+                    flashcards: flashcards
                 }
             };
 

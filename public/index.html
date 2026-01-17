@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduTransform AI - Multi-Agent Learning System</title>
-    <meta name="description" content="Transform educational documents into three learning formats using advanced AI agents">
+    <title>EduTransform AI - 4-Stage Learning System</title>
+    <meta name="description" content="Transform educational documents into four learning stages">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <!-- Header -->
     <header class="header">
@@ -19,7 +21,7 @@
                     <span class="logo-icon">🎓</span>
                     <span class="logo-text">EduTransform AI</span>
                 </h1>
-                <p class="tagline">Multi-Agent Educational Transformation System</p>
+                <p class="tagline">Transform Your Learning Experience</p>
             </div>
         </div>
     </header>
@@ -30,115 +32,122 @@
             <!-- Upload Section -->
             <section class="upload-section" id="uploadSection">
                 <div class="upload-card">
-                    <h2 class="section-title">Transform Your Learning Material</h2>
+                    <h2 class="section-title">Upload Your Study Material</h2>
                     <p class="section-description">
-                        Upload any educational document and watch four specialized AI agents transform it into 
-                        <strong>three distinct learning formats</strong>: simplified explanations, visual summaries, and deep technical analysis.
+                        Upload a document or paste text to receive <strong>four expertly crafted learning
+                            formats</strong>.
                     </p>
-                    
-                    <div class="upload-area" id="uploadArea">
-                        <input type="file" id="fileInput" accept=".pdf,.txt" hidden>
-                        <div class="upload-icon">📄</div>
-                        <h3 class="upload-title">Drop your document here</h3>
-                        <p class="upload-subtitle">or click to browse</p>
-                        <p class="upload-formats">Supports PDF and TXT files (max 10MB)</p>
+
+                    <!-- Tab Switcher -->
+                    <div class="input-tabs">
+                        <button class="tab-btn active" data-tab="file">📄 Upload File</button>
+                        <button class="tab-btn" data-tab="text">✏️ Paste Text</button>
+                    </div>
+
+                    <!-- File Upload Tab -->
+                    <div class="tab-content active" id="fileTab">
+                        <div class="upload-area" id="uploadArea">
+                            <input type="file" id="fileInput" accept=".pdf,.txt" hidden>
+                            <div class="upload-icon">📄</div>
+                            <h3 class="upload-title">Drop your document here</h3>
+                            <p class="upload-subtitle">or click to browse</p>
+                            <p class="upload-formats">Supports PDF and TXT files (max 10MB)</p>
+                        </div>
+                    </div>
+
+                    <!-- Text Input Tab -->
+                    <div class="tab-content" id="textTab">
+                        <textarea id="textInput" class="text-input-area"
+                            placeholder="Paste your educational content here...&#10;&#10;Example: Explain photosynthesis, quantum mechanics, or any topic you want to learn about."></textarea>
+                        <p class="text-char-count"><span id="charCount">0</span> characters</p>
                     </div>
 
                     <button class="btn-primary" id="processBtn" disabled>
-                        <span class="btn-text">Process Document</span>
+                        <span class="btn-text">Generate Learning Stages</span>
                         <span class="btn-icon">→</span>
                     </button>
                 </div>
 
-                <!-- Agent Status -->
-                <div class="agent-status" id="agentStatus" style="display: none;">
-                    <h3 class="status-title">Agent Pipeline Status</h3>
-                    <div class="status-grid">
-                        <div class="status-item" data-agent="1">
-                            <div class="status-icon">🔍</div>
-                            <div class="status-content">
-                                <div class="status-name">Document Analyzer</div>
-                                <div class="status-desc">Extracting knowledge structure...</div>
-                            </div>
-                            <div class="status-indicator"></div>
-                        </div>
-                        <div class="status-item" data-agent="2">
-                            <div class="status-icon">💡</div>
-                            <div class="status-content">
-                                <div class="status-name">Simplification Specialist</div>
-                                <div class="status-desc">Creating beginner-friendly version...</div>
-                            </div>
-                            <div class="status-indicator"></div>
-                        </div>
-                        <div class="status-item" data-agent="3">
-                            <div class="status-icon">📊</div>
-                            <div class="status-content">
-                                <div class="status-name">Visual Synthesizer</div>
-                                <div class="status-desc">Building visual format...</div>
-                            </div>
-                            <div class="status-indicator"></div>
-                        </div>
-                        <div class="status-item" data-agent="4">
-                            <div class="status-icon">🎯</div>
-                            <div class="status-content">
-                                <div class="status-name">Deep-Dive Expander</div>
-                                <div class="status-desc">Generating advanced analysis...</div>
-                            </div>
-                            <div class="status-indicator"></div>
-                        </div>
-                    </div>
+                <!-- Processing Status -->
+                <div class="processing-status" id="processingStatus" style="display: none;">
+                    <div class="status-spinner"></div>
+                    <p class="status-text">Analyzing your content and generating learning materials...</p>
                 </div>
             </section>
 
-            <!-- Results Section -->
+            <!-- Results Section - 4-Stage Dashboard -->
             <section class="results-section" id="resultsSection" style="display: none;">
                 <div class="results-header">
-                    <h2 class="section-title">Your Learning Formats</h2>
+                    <h2 class="section-title">Your Learning Stages</h2>
                     <button class="btn-secondary" id="newDocBtn">
-                        <span>Process New Document</span>
+                        <span>Process New Content</span>
                     </button>
                 </div>
 
-                <div class="results-grid">
-                    <!-- Simplified Format -->
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon">💡</div>
-                            <div>
-                                <h3 class="result-title">Simplified</h3>
-                                <p class="result-subtitle">Beginner-friendly explanation</p>
+                <!-- Dashboard Grid Layout -->
+                <div class="dashboard-grid">
+                    <!-- Top Row: Simplified + Deep-Dive -->
+                    <div class="top-row">
+                        <!-- Simplified Explanation (Left) -->
+                        <div class="stage-card simplified-card">
+                            <div class="stage-header">
+                                <div class="stage-icon">💡</div>
+                                <div>
+                                    <h3 class="stage-title">Simplified Explanation</h3>
+                                    <p class="stage-subtitle">Quick overview for beginners</p>
+                                </div>
+                            </div>
+                            <div class="stage-content scrollable" id="simplifiedOutput">
+                                <!-- Content will be inserted here -->
                             </div>
                         </div>
-                        <div class="result-content markdown-content" id="simplifiedOutput">
-                            <!-- Content will be inserted here -->
+
+                        <!-- Deep-Dive Explanation (Right) -->
+                        <div class="stage-card deepdive-card">
+                            <div class="stage-header">
+                                <div class="stage-icon">🎯</div>
+                                <div>
+                                    <h3 class="stage-title">Deep-Dive Explanation</h3>
+                                    <p class="stage-subtitle">Comprehensive understanding</p>
+                                </div>
+                            </div>
+                            <div class="stage-content scrollable" id="deepDiveOutput">
+                                <!-- Content will be inserted here -->
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Visual Format -->
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon">📊</div>
-                            <div>
-                                <h3 class="result-title">Visual</h3>
-                                <p class="result-subtitle">Scannable bullet points</p>
+                    <!-- Middle Row: Visual Learning -->
+                    <div class="visual-section">
+                        <div class="stage-card visual-card">
+                            <div class="stage-header">
+                                <div class="stage-icon">📊</div>
+                                <div>
+                                    <h3 class="stage-title">Visual Learning</h3>
+                                    <p class="stage-subtitle">Concept maps and diagrams</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="result-content markdown-content" id="visualOutput">
-                            <!-- Content will be inserted here -->
+                            <div class="stage-content" id="visualOutput">
+                                <!-- Content will be inserted here -->
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Deep-Dive Format -->
-                    <div class="result-card">
-                        <div class="result-header">
-                            <div class="result-icon">🎯</div>
-                            <div>
-                                <h3 class="result-title">Deep-Dive</h3>
-                                <p class="result-subtitle">Advanced technical analysis</p>
+                    <!-- Bottom Row: Flashcards -->
+                    <div class="flashcards-section">
+                        <div class="stage-card flashcards-card">
+                            <div class="stage-header">
+                                <div class="stage-icon">🎴</div>
+                                <div>
+                                    <h3 class="stage-title">Exam Flashcards</h3>
+                                    <p class="stage-subtitle">Quick recall and memorization</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="result-content markdown-content" id="deepDiveOutput">
-                            <!-- Content will be inserted here -->
+                            <div class="stage-content">
+                                <div class="flashcards-grid" id="flashcardsOutput">
+                                    <!-- Flashcards will be inserted here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -149,10 +158,11 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>Powered by Gemini AI • Four Specialized Agents • True Agentic AI</p>
+            <p>Powered by Advanced AI • Four Learning Stages • Adaptive Education</p>
         </div>
     </footer>
 
     <script src="app.js"></script>
 </body>
+
 </html>

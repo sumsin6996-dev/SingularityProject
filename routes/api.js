@@ -85,6 +85,52 @@ router.post('/process', upload.single('document'), async (req, res) => {
 });
 
 /**
+ * POST /api/process-text
+ * Process text content directly through the agent pipeline
+ */
+router.post('/process-text', express.json(), async (req, res) => {
+    try {
+        const { text } = req.body;
+
+        if (!text || text.trim().length < 50) {
+            return res.status(400).json({
+                success: false,
+                error: 'Text content must be at least 50 characters'
+            });
+        }
+
+        console.log(`\n[API] Processing text input: ${text.length} characters`);
+
+        // Create temporary file from text
+        const tempDir = config.upload.uploadDir;
+        await fs.mkdir(tempDir, { recursive: true });
+
+        const tempFile = path.join(tempDir, `text-${Date.now()}.txt`);
+        await fs.writeFile(tempFile, text);
+
+        // Process through agent pipeline
+        const result = await agentPipeline.process(tempFile);
+
+        // Clean up temp file
+        try {
+            await fs.unlink(tempFile);
+        } catch (cleanupError) {
+            console.error('File cleanup error:', cleanupError);
+        }
+
+        res.json(result);
+
+    } catch (error) {
+        console.error('[API] Text processing error:', error);
+
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Processing failed'
+        });
+    }
+});
+
+/**
  * GET /api/health
  * Health check endpoint
  */
